@@ -1,6 +1,7 @@
 (function() {
   'use strict';
 
+  var twemoji = require('twemoji');
   var Bacon = require('baconjs');
 
   var animationFrame = Bacon.fromBinder(function(sink) {
@@ -18,7 +19,7 @@
   function Stalker(targetStream) {
     var elem = document.createElement('div');
     elem.style.position = 'absolute';
-    elem.textContent = '☆';
+    elem.innerHTML = twemoji.parse('\u2b50');
 
     var position = { x: 400, y: 400 };
     elem.style.display = 'none';
@@ -50,7 +51,7 @@
 
       var distance = Math.sqrt(Math.pow(xDiff, 2) + Math.pow(yDiff, 2));
 
-      var progress = Math.min(1.0, Math.max(0.0, distance / bound - 0.5));
+      var progress = Math.min(1.0, Math.max(0.0, distance / bound - 0.3));
 
       var relativeX = xDir * progress * bound * ( distance === 0 ? 1 : xDiff / distance );
       var relativeY = yDir * progress * bound * ( distance === 0 ? 1 : yDiff / distance );
