@@ -1,0 +1,7 @@
+{
+  "name": "mouse-stalker",
+  "dependencies": {
+    "baconjs": "^0.7.49"
+  },
+  "devDependencies": {}
+}
