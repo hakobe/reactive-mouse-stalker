@@ -3,12 +3,6 @@
 
   var Bacon = require('baconjs');
 
-  var mousePointer = {x: 500, y: 500};
-  Bacon.fromEventTarget(document, 'mousemove').onValue(function(me) {
-    mousePointer.x = me.clientX;
-    mousePointer.y = me.clientY;
-  });
-
   var animationFrame = Bacon.fromBinder(function(sink) {
     var unsub;
     function next(t) {
@@ -21,49 +15,74 @@
 
   var timer = Bacon.interval(100, true);
 
-  function Stalker(offsetX, offsetY, bound) {
+  function Stalker(targetStream) {
     var elem = document.createElement('div');
     elem.style.position = 'absolute';
     elem.textContent = '☆';
 
-    var p = { x: 400, y: 400 };
-    elem.style.left = p.x + 'px';
-    elem.style.top = p.y + 'px';
+    var position = { x: 400, y: 400 };
+    elem.style.display = 'none';
+    elem.style.left = position.x + 'px';
+    elem.style.top = position.y + 'px';
 
     document.body.appendChild(elem);
 
-    function next() {
-      var xDiff = Math.abs(p.x - mousePointer.x);
-      var yDiff = Math.abs(p.y - mousePointer.y);
+    var initialized = false;
 
-      var xDir = p.x > mousePointer.x ? 1 : -1;
-      var yDir = p.y > mousePointer.y ? 1 : -1;
+    var targetPosition = {x: 0, y:0};
+    targetStream.onValue(function(p) {
+      if (!initialized) {
+        elem.style.display = '';
+        initialized = true;
+      }
+      targetPosition.x = p.x;
+      targetPosition.y = p.y;
+    });
+
+    var bound = 10;
+
+    function next() {
+      var xDiff = Math.abs(position.x - targetPosition.x);
+      var yDiff = Math.abs(position.y - targetPosition.y);
+
+      var xDir = position.x > targetPosition.x ? 1 : -1;
+      var yDir = position.y > targetPosition.y ? 1 : -1;
 
       var distance = Math.sqrt(Math.pow(xDiff, 2) + Math.pow(yDiff, 2));
 
-      var progress = Math.min(1.0, Math.max(0.0, distance / bound - 0.05));
+      var progress = Math.min(1.0, Math.max(0.0, distance / bound - 0.5));
 
       var relativeX = xDir * progress * bound * ( distance === 0 ? 1 : xDiff / distance );
       var relativeY = yDir * progress * bound * ( distance === 0 ? 1 : yDiff / distance );
-      console.log('d', distance, xDiff, yDiff);
-      console.log(mousePointer.x + relativeX - p.x, mousePointer.y + relativeY - p.y);
 
-      var newX = mousePointer.x + relativeX;
-      var newY = mousePointer.y + relativeY;
+      var newX = targetPosition.x + relativeX;
+      var newY = targetPosition.y + relativeY;
 
       return {x: newX, y: newY};
     }
 
+    var self = this;
+    var ps = new Bacon.Bus();
+    self.positionStream = ps.skipDuplicates();
     animationFrame.onValue(function() {
-      p = next();
-      elem.style.left = p.x + offsetX + 'px';
-      elem.style.top = p.y +  offsetY + 'px';
+      if (initialized) {
+        position = next();
+        ps.push(position);
+        elem.style.left = position.x + 'px';
+        elem.style.top = position.y + 'px';
+      }
     });
   }
 
-  new Stalker(10, 10, 30);
-  new Stalker(10, 10, 50);
-  new Stalker(10, 10, 70);
-  new Stalker(10, 10, 90);
-  new Stalker(10, 10, 90);
+  var mouseCursorStream = Bacon.fromEventTarget(document, 'mousemove').map(function(me) {
+    return {
+      x: me.clientX,
+      y: me.clientY
+    };
+  });
+
+  var cur = new Stalker(mouseCursorStream);
+  for (var i = 0; i < 30; i++) {
+    cur = new Stalker(cur.positionStream.delay(100));
+  }
 })();
