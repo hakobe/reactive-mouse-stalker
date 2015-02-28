@@ -5,5 +5,5 @@ var browserify = require("browserify");
 gulp.task('default', function() {
   browserify("./main.js") .bundle()
     .pipe(source("main.js"))
-  :e.pipe(gulp.dest("compiled/"));
+    .pipe(gulp.dest("compiled/"));
 });
