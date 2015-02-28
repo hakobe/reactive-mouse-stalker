@@ -3,7 +3,9 @@ var source = require('vinyl-source-stream');
 var browserify = require("browserify");
 
 gulp.task('default', function() {
-  browserify("./main.js") .bundle()
-    .pipe(source("main.js"))
+  browserify()
+    .require('./reactive-mouse-stalker.js', { expose: 'reactive-mouse-stalker' })
+    .bundle()
+    .pipe(source("compiled.js"))
     .pipe(gulp.dest("compiled/"));
 });
