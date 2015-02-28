@@ -4,7 +4,8 @@
     "build": "gulp"
   },
   "dependencies": {
-    "baconjs": "^0.7.49"
+    "baconjs": "^0.7.49",
+    "twemoji": "^1.2.0"
   },
   "devDependencies": {
     "browserify": "^9.0.3",
